@@ -55,39 +55,14 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // @formatter:off
         http
-            .csrf()
-            .ignoringAntMatchers("/h2-console/**")
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-        .and()
-            .addFilterBefore(corsFilter, CsrfFilter.class)
+            .csrf().disable()
             .exceptionHandling()
                 .authenticationEntryPoint(problemSupport)
                 .accessDeniedHandler(problemSupport)
         .and()
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .antMatchers("/swagger-ui/**").permitAll()
-            .antMatchers("/test/**").permitAll()
-            .antMatchers("/h2-console/**").permitAll()
-            .antMatchers("/api/authenticate").permitAll()
-            .antMatchers("/api/auth-info").permitAll()
-            .antMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
-            .antMatchers("/api/**").authenticated()
-            .antMatchers("/websocket/**").authenticated()
-            .antMatchers("/management/health").permitAll()
-            .antMatchers("/management/health/**").permitAll()
-            .antMatchers("/management/info").permitAll()
-            .antMatchers("/management/prometheus").permitAll()
-            .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
-        .and()
-            .oauth2Login()
-        .and()
-            .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(authenticationConverter())
-                .and()
-            .and()
-                .oauth2Client();
+                .antMatchers("/**").permitAll();
         return http.build();
         // @formatter:on
     }

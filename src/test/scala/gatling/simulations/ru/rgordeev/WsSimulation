@@ -1,0 +1,53 @@
+package ru.targetcall
+
+import io.gatling.core.Predef._
+import io.gatling.http.Predef._
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+class WsSimulation extends Simulation {
+  val httpConf = http
+    .baseUrl("http://localhost:8080")
+    .acceptHeader("*/*")
+    .wsBaseUrl("ws://localhost:8080")
+
+  val connect =
+    """CONNECT
+      |accept-version:1.1,1.0
+      |heart-beat:10000,10000
+      |
+      |\u0000""".stripMargin
+
+  val subscribe =
+    """SUBSCRIBE
+      |id:sub-0
+      |destination:/topic/tracker
+      |
+      |\u0000""".stripMargin
+
+  val sendText =
+    """SEND
+      |destination:/topic/activity
+      |content-type:application/json
+      |
+      |{"sessionId":"AAAAA"}
+      |\u0000""".stripMargin
+
+  val scn = scenario("WebSocket Scenario")
+    .exec(ws("WS connection")
+      .connect("/websocket/tracker"))
+    .exec(ws("Connect via STOMP")
+      .sendText(connect)).pause(3)
+    .exec(ws("Subscribe")
+      .sendText(subscribe)
+    ).pause(1)
+    .exec(ws("Send Message")
+      .sendText(sendText))
+    .pause(2)
+    .exec(ws("WS close").close)
+
+  setUp(
+    scn.inject(atOnceUsers(1))
+  ).protocols(httpConf)
+}
